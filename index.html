@@ -1,0 +1,610 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>歷史錯題練習</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, 'Noto Sans TC', sans-serif;
+    background: #f0f4f8; color: #1a1a2e; min-height: 100vh;
+  }
+  #app { max-width: 800px; margin: 0 auto; padding: 16px; }
+
+  /* ── Screens ── */
+  .screen {
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    min-height: 80vh; text-align: center; padding: 32px 16px;
+  }
+  .screen h1 { font-size: 1.9rem; margin-bottom: 12px; color: #1d4e89; }
+  .screen p  { font-size: 1.05rem; color: #555; margin-bottom: 24px; line-height: 1.7; }
+  .badge {
+    background: #1d4e89; color: white; border-radius: 50%;
+    width: 96px; height: 96px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 2.4rem; margin-bottom: 24px;
+  }
+
+  /* ── Progress ── */
+  #progress-wrap {
+    background: #dde; border-radius: 999px; height: 10px;
+    margin-bottom: 6px; overflow: hidden;
+  }
+  #progress-bar {
+    height: 100%;
+    background: linear-gradient(90deg, #5b9bd5, #1d4e89);
+    border-radius: 999px; transition: width .4s ease;
+  }
+  #progress-label { font-size: 0.82rem; color: #666; margin-bottom: 14px; }
+  #round-badge { text-align: center; font-size: 0.82rem; color: #888; margin-bottom: 7px; }
+
+  /* ── Card ── */
+  #card {
+    background: white; border-radius: 20px; padding: 22px 20px;
+    box-shadow: 0 4px 20px rgba(0,0,0,.08); margin-bottom: 14px;
+  }
+  #section-tag {
+    display: inline-block; background: #dbeafe; color: #1d4e89;
+    font-size: 0.78rem; padding: 3px 12px; border-radius: 999px;
+    margin-bottom: 10px; font-weight: 700;
+  }
+  #group-context {
+    background: #f8f9fa; border-left: 4px solid #5b9bd5;
+    padding: 10px 14px; margin-bottom: 14px; border-radius: 0 8px 8px 0;
+    font-size: 0.93rem; line-height: 1.75;
+  }
+  #group-context img { max-width: 100%; border-radius: 6px; margin: 6px 0; display: block; }
+  #question-stem { font-size: 1.03rem; line-height: 1.85; margin-bottom: 18px; }
+  #question-stem img { max-width: 100%; border-radius: 8px; margin: 8px 0; display: block; }
+
+  /* ── Options ── */
+  #options { display: flex; flex-direction: column; gap: 10px; }
+  .opt-btn {
+    display: flex; align-items: flex-start; gap: 10px;
+    background: #f8f9fa; border: 2px solid #e0e0e0; border-radius: 12px;
+    padding: 13px 14px; font-size: 0.98rem; cursor: pointer;
+    text-align: left; transition: all .18s; width: 100%; line-height: 1.6;
+  }
+  .opt-btn .lbl {
+    background: #e0e0e0; color: #555; border-radius: 7px;
+    min-width: 30px; height: 30px;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 700; font-size: 0.88rem; flex-shrink: 0; transition: all .18s;
+  }
+  .opt-btn.selected   { border-color: #457b9d; background: #dbeafe; }
+  .opt-btn.selected .lbl { background: #457b9d; color: white; }
+  .opt-btn.correct    { border-color: #1d4e89; background: #dbeafe; }
+  .opt-btn.correct .lbl { background: #1d4e89; color: white; }
+  .opt-btn.wrong      { border-color: #e63946; background: #ffe0e3; }
+  .opt-btn.wrong .lbl { background: #e63946; color: white; }
+  .opt-btn.reveal     { border-color: #1d4e89; background: #dbeafe; }
+  .opt-btn.reveal .lbl { background: #1d4e89; color: white; }
+
+  /* 圖片選項模式 */
+  #img-opt-display { margin-bottom: 14px; line-height: 1.8; font-size: 0.98rem; }
+  #img-opt-display img { max-width: 100%; border-radius: 6px; margin: 6px 0; display: block; }
+  .abcd-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .abcd-btn {
+    padding: 16px; font-size: 1.15rem; font-weight: 700;
+    background: #f8f9fa; border: 2px solid #e0e0e0; border-radius: 12px;
+    cursor: pointer; transition: all .18s;
+  }
+  .abcd-btn.selected  { border-color: #457b9d; background: #dbeafe; color: #1d3557; }
+  .abcd-btn.correct   { border-color: #1d4e89; background: #dbeafe; color: #1d4e89; }
+  .abcd-btn.wrong     { border-color: #e63946; background: #ffe0e3; color: #e63946; }
+  .abcd-btn.reveal    { border-color: #1d4e89; background: #dbeafe; color: #1d4e89; }
+
+  /* ── Confirm button ── */
+  #confirm-btn {
+    width: 100%; padding: 17px; font-size: 1.05rem; font-weight: 700;
+    background: #457b9d; color: white; border: none; border-radius: 14px;
+    cursor: pointer; display: none; margin-top: 12px; transition: background .2s;
+  }
+  #confirm-btn:active { background: #1d3557; }
+
+  /* ── Feedback ── */
+  #feedback {
+    border-radius: 12px; padding: 13px 16px; margin-top: 12px;
+    font-size: 1rem; font-weight: 600; display: none;
+  }
+  #feedback.ok  { background: #dbeafe; color: #1d3557; }
+  #feedback.err { background: #ffe0e3; color: #9b2226; }
+
+  /* ── Next button ── */
+  #next-btn {
+    width: 100%; padding: 17px; font-size: 1.05rem; font-weight: 700;
+    background: #1d4e89; color: white; border: none; border-radius: 14px;
+    cursor: pointer; display: none; margin-top: 12px; transition: background .2s;
+  }
+  #next-btn:active { background: #0f2d50; }
+
+  /* ── Shared button styles ── */
+  .big-btn {
+    padding: 17px 38px; font-size: 1.05rem; font-weight: 700;
+    background: #1d4e89; color: white; border: none;
+    border-radius: 14px; cursor: pointer; transition: background .2s;
+  }
+  .big-btn:active { background: #0f2d50; }
+  .big-btn.sec {
+    background: white; color: #1d4e89; border: 2px solid #1d4e89;
+  }
+  .btn-row { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
+  .btn-col { display: flex; flex-direction: column; gap: 10px; align-items: center; width: 100%; max-width: 320px; }
+  .btn-col .big-btn { width: 100%; }
+
+  /* ── Stats ── */
+  .stats-grid {
+    display: grid; grid-template-columns: 1fr 1fr;
+    gap: 12px; margin: 20px 0; width: 100%; max-width: 300px;
+  }
+  .stat-box {
+    background: white; border-radius: 16px; padding: 16px;
+    text-align: center; box-shadow: 0 2px 8px rgba(0,0,0,.06);
+  }
+  .stat-box .num { font-size: 1.9rem; font-weight: 900; color: #1d4e89; }
+  .stat-box .lbl { font-size: 0.78rem; color: #888; margin-top: 3px; }
+
+  .hidden { display: none !important; }
+
+  /* ── Save button (fixed top-right) ── */
+  #save-btn {
+    position: fixed; top: 14px; right: 14px; z-index: 200;
+    background: #1d4e89; color: white; border: none; border-radius: 10px;
+    padding: 9px 16px; font-size: 0.88rem; font-weight: 700;
+    cursor: pointer; box-shadow: 0 2px 8px rgba(0,0,0,.25);
+    transition: background .15s;
+  }
+  #save-btn:active { background: #0f2d50; }
+  #save-btn.saved  { background: #27ae60; }
+
+  /* ── Guessed button ── */
+  #guessed-btn {
+    width: 100%; padding: 11px 14px; font-size: 0.9rem; font-weight: 600;
+    background: white; color: #d97706; border: 2px solid #fbbf24;
+    border-radius: 12px; cursor: pointer; display: none; margin-top: 8px;
+    transition: all .18s; text-align: left;
+  }
+  #guessed-btn.marked { color: #9ca3af; border-color: #d1d5db; cursor: default; }
+</style>
+</head>
+<body>
+<button id="save-btn" class="hidden" onclick="saveProgress()">💾 暫存進度</button>
+<div id="app">
+
+  <!-- ─── 開始畫面 ─── -->
+  <div id="start-screen" class="screen">
+    <div class="badge">📋</div>
+    <h1>公民錯題練習</h1>
+    <p>共 <strong id="total-count"></strong> 題<br>
+       答錯的題目會自動回收，直到全部答對為止</p>
+    <div class="btn-col" style="margin-top:4px;">
+      <button class="big-btn" onclick="startQuiz()">開始練習</button>
+      <button id="restore-btn" class="big-btn sec hidden" onclick="restoreProgress()">↩ 繼續上次進度</button>
+    </div>
+  </div>
+
+  <!-- ─── 答題畫面 ─── -->
+  <div id="quiz-screen" class="hidden">
+    <div id="round-badge"></div>
+    <div id="progress-wrap"><div id="progress-bar" style="width:0%"></div></div>
+    <div id="progress-label"></div>
+    <div id="card">
+      <div id="section-tag"></div>
+      <div id="group-context" class="hidden"></div>
+      <div id="question-stem"></div>
+      <div id="options"></div>
+    </div>
+    <button id="confirm-btn" onclick="confirmAnswer()">確認送出</button>
+    <div id="feedback"></div>
+    <button id="guessed-btn" onclick="markAsGuessed()">🎲 我是用猜的，加入回收</button>
+    <button id="next-btn" onclick="nextQuestion()">下一題 →</button>
+  </div>
+
+  <!-- ─── 每輪結束畫面 ─── -->
+  <div id="round-end-screen" class="screen hidden">
+    <div class="badge" id="re-emoji">📝</div>
+    <h1 id="re-title">第一輪完成</h1>
+    <p id="re-desc"></p>
+    <div class="stats-grid">
+      <div class="stat-box">
+        <div class="num" id="re-total"></div>
+        <div class="lbl">本輪題數</div>
+      </div>
+      <div class="stat-box">
+        <div class="num" id="re-correct" style="color:#1d4e89;"></div>
+        <div class="lbl">答對</div>
+      </div>
+      <div class="stat-box">
+        <div class="num" id="re-wrong" style="color:#e63946;"></div>
+        <div id="re-wrong-lbl" class="lbl">答錯（回收）</div>
+      </div>
+      <div class="stat-box">
+        <div class="num" id="re-rounds"></div>
+        <div class="lbl">目前輪數</div>
+      </div>
+    </div>
+    <div class="btn-col">
+      <button class="big-btn" id="re-next-btn" onclick="startNextRound()">開始第二輪</button>
+      <button class="big-btn sec" id="re-export-btn" onclick="exportRoundPDF()">📥 儲存本輪錯題</button>
+      <button class="big-btn sec" id="re-restart-btn" onclick="restartQuiz()" style="border-color:#aaa;color:#888;">全部重練</button>
+    </div>
+  </div>
+
+</div>
+<script>
+const QUESTIONS = [{"section": "【公民5-3】", "type": "mc", "group_context": "", "stem": "下列何者的做法符合我們所要追求的「公平正義」？", "opts": {"A": "大仁捐贈健身器材給國軍", "B": "小馬擔任選舉活動的義工", "C": "基金會發放清寒獎助學金", "D": "阿聖要求插隊者遵守規則。"}, "full_html": "下列何者的做法符合我們所要追求的「公平正義」？　\n(Ａ)大仁捐贈健身器材給國軍　(Ｂ)小馬擔任選舉活動的義工　(Ｃ)基金會發放清寒獎助學金　(Ｄ)阿聖要求插隊者遵守規則。", "grp_n": null, "sub_n": null, "answer": "C", "id": 0}, {"section": "【公民5-3】", "type": "mc", "group_context": "", "stem": "顏顏在暑假期間做了以下安排：第一個是(甲)擔任減塑環保志工，響應漁光島淨灘活動；接著是(乙)響應「待用餐活動」，準備餐點或飲品，讓弱勢民眾可以自行取用；第三個是(丙)聲援焚化爐周圍社區的「還我好空氣」遊行，讓政府降低汙染、重視呼吸權的重要；第四個是(丁)參加人權協會辦的參訪，了解基隆港二二八事件的始末。上述有哪些實踐公平正義的精神？", "opts": {"A": "甲乙", "B": "丙丁", "C": "乙丙", "D": "甲丁。"}, "full_html": "顏顏在暑假期間做了以下安排：第一個是(甲)擔任減塑環保志工，響應漁光島淨灘活動；接著是(乙)響應「待用餐活動」，準備餐點或飲品，讓弱勢民眾可以自行取用；第三個是(丙)聲援焚化爐周圍社區的「還我好空氣」遊行，讓政府降低汙染、重視呼吸權的重要；第四個是(丁)參加人權協會辦的參訪，了解基隆港二二八事件的始末。上述有哪些實踐公平正義的精神？　\n(Ａ)甲乙　(Ｂ)丙丁　(Ｃ)乙丙　(Ｄ)甲丁。", "grp_n": null, "sub_n": null, "answer": "C", "id": 1}, {"section": "【公民6-3】", "type": "mc", "group_context": "", "stem": "「因連日大雨，造成山區部落對外聯絡中斷，政府緊急派遣直升機運送救援物資，並將病患護送就醫。」上述新聞應與哪一項社會福利措施有關？", "opts": {"A": "社會保險", "B": "社會救助", "C": "社會住宅", "D": "醫療保健。"}, "full_html": "「因連日大雨，造成山區部落對外聯絡中斷，政府緊急派遣直升機運送救援物資，並將病患護送就醫。」上述新聞應與哪一項社會福利措施有關？　\n(Ａ)社會保險　(Ｂ)社會救助　(Ｃ)社會住宅　(Ｄ)醫療保健。", "grp_n": null, "sub_n": null, "answer": "B", "id": 2}, {"section": "【公民6-3】", "type": "mc", "group_context": "", "stem": "我國凡年滿　65　歲、加入農保之農民，只要符合法律規定即可向所屬農會申請每個月領取　8,110　元。依上述內容判斷，這應是指哪一項社會福利措施？", "opts": {"A": "社會救助", "B": "社會津貼", "C": "社會保險", "D": "國民就業。"}, "full_html": "我國凡年滿　65　歲、加入農保之農民，只要符合法律規定即可向所屬農會申請每個月領取　8,110　元。依上述內容判斷，這應是指哪一項社會福利措施？　\n(Ａ)社會救助　(Ｂ)社會津貼　(Ｃ)社會保險　(Ｄ)國民就業。", "grp_n": null, "sub_n": null, "answer": "B", "id": 3}, {"section": "【公民6-3】", "type": "mc", "group_context": "", "stem": "為了鼓勵年輕人提高生育率，政府在近期放寬了國民年金生育給付的申請條件，讓更多家庭能夠享有這項補助，進而減輕育兒的經濟負擔。上述這項政策屬於下列哪一項社會福利措施？", "opts": {"A": "社會保險", "B": "社會救助", "C": "居住正義", "D": "福利服務。"}, "full_html": "為了鼓勵年輕人提高生育率，政府在近期放寬了國民年金生育給付的申請條件，讓更多家庭能夠享有這項補助，進而減輕育兒的經濟負擔。上述這項政策屬於下列哪一項社會福利措施？　\n(Ａ)社會保險　(Ｂ)社會救助　(Ｃ)居住正義　(Ｄ)福利服務。", "grp_n": null, "sub_n": null, "answer": "A", "id": 4}, {"section": "【公民6-3】", "type": "mc", "group_context": "", "stem": "臺北市發生一起保母虐童案，引發社會對幼兒照護問題的關注。為了防止類似事件再度發生，政府推動幼兒專責醫師制度，並將於　11　月正式上路，確保幼兒的健康權益受到保障。上述這項政策應屬於下列哪一項社會福利措施？", "opts": {"A": "醫療保健", "B": "福利服務", "C": "社會救助", "D": "社會津貼。"}, "full_html": "臺北市發生一起保母虐童案，引發社會對幼兒照護問題的關注。為了防止類似事件再度發生，政府推動幼兒專責醫師制度，並將於　11　月正式上路，確保幼兒的健康權益受到保障。上述這項政策應屬於下列哪一項社會福利措施？　\n(Ａ)醫療保健　(Ｂ)福利服務　(Ｃ)社會救助　(Ｄ)社會津貼。", "grp_n": null, "sub_n": null, "answer": "A", "id": 5}, {"section": "【公民6-3】", "type": "mc", "group_context": "", "stem": "在春節前，許多地方政府會考量人民的年前需求，提前發放低收入戶生活補助，讓經濟弱勢民眾可提早採買年貨。上述提及的社會福利政策為何？", "opts": {"A": "提供救助與緊急照顧的社會救助", "B": "因應國民特殊需求的社會津貼", "C": "強制納保的社會保險", "D": "提供生活照顧的福利服務。"}, "full_html": "在春節前，許多地方政府會考量人民的年前需求，提前發放低收入戶生活補助，讓經濟弱勢民眾可提早採買年貨。上述提及的社會福利政策為何？　\n(Ａ)提供救助與緊急照顧的社會救助　(Ｂ)因應國民特殊需求的社會津貼　(Ｃ)強制納保的社會保險　(Ｄ)提供生活照顧的福利服務。", "grp_n": null, "sub_n": null, "answer": "A", "id": 6}, {"section": "【公民6-3】", "type": "mc", "group_context": "", "stem": "下列齊家縣政府推動的政策中，何者在我國社會福利制度的分類上與其他三者不同？", "opts": {"A": "推動醫療健檢巡迴列車", "B": "開辦新移民生活適應班", "C": "推動無障礙步道等設施", "D": "設立老人日間照顧中心。"}, "full_html": "下列齊家縣政府推動的政策中，何者在我國社會福利制度的分類上與其他三者不同？　\n(Ａ)推動醫療健檢巡迴列車　(Ｂ)開辦新移民生活適應班　(Ｃ)推動無障礙步道等設施　(Ｄ)設立老人日間照顧中心。", "grp_n": null, "sub_n": null, "answer": "A", "id": 7}, {"section": "【公民6-12】", "type": "mc", "group_context": "", "stem": "以下是某位民眾投書的部分內容，請判斷該位民眾認為應如何解決此項困境？\n時事評論\n……由於協助照顧的人力資源不足，每天的吃飯、如廁都受到次數限制，有時還得挨餓，對於一般人而言很難想像，但卻是許多身心障礙者的日常。因為身體上的障礙，他們無法集結起來為自己的權益發聲，希望政府重視弱勢群體權益，透過修法建立完整制度，協助身心障礙者自立生活。", "opts": {"A": "犧牲多數人的權益扶助弱勢", "B": "透過公眾意見解決公共事務", "C": "結合民間力量建立照護體系", "D": "運用國家力量分配公共資源。"}, "full_html": "以下是某位民眾投書的部分內容，請判斷該位民眾認為應如何解決此項困境？\n時事評論\n……由於協助照顧的人力資源不足，每天的吃飯、如廁都受到次數限制，有時還得挨餓，對於一般人而言很難想像，但卻是許多身心障礙者的日常。因為身體上的障礙，他們無法集結起來為自己的權益發聲，希望政府重視弱勢群體權益，透過修法建立完整制度，協助身心障礙者自立生活。", "grp_n": null, "sub_n": null, "answer": "D", "id": 8}, {"section": "【公民L6平時測驗卷】", "type": "mc", "group_context": "", "stem": "全民健康保險的實施，一方面可以免除人民因疾病所形成的財務威脅，另一方面也可以使社會成員平等享用基本的醫療服務，這是政府的何項社會福利政策？", "opts": {"A": "社會津貼", "B": "國民就業", "C": "社會保險", "D": "醫療保健。"}, "full_html": "全民健康保險的實施，一方面可以免除人民因疾病所形成的財務威脅，另一方面也可以使社會成員平等享用基本的醫療服務，這是政府的何項社會福利政策？\n(A)社會津貼(B)國民就業 \n(C)社會保險(D)醫療保健。", "grp_n": null, "sub_n": null, "answer": "C", "id": 9}];
+
+let queue=[], cur=0, round=1;
+let roundWrongIds=new Set();
+let roundGuessedIds=new Set();
+let roundWrongAns={};
+let roundTotal=0;
+let sessionWrongIds=new Set();
+let sessionWrongAns={};
+let correct1=0, totalWrong=0;
+let answered=false;
+let selectedOptKey=null;
+
+document.getElementById('total-count').textContent = QUESTIONS.length;
+
+const SAVE_KEY = 'civ_quiz_v1';
+
+function saveProgress() {
+  const state = {
+    queue, cur, round,
+    roundWrongIds: [...roundWrongIds],
+    roundGuessedIds: [...roundGuessedIds],
+    roundWrongAns,
+    sessionWrongIds: [...sessionWrongIds],
+    sessionWrongAns,
+    correct1, totalWrong,
+    ts: Date.now()
+  };
+  localStorage.setItem(SAVE_KEY, JSON.stringify(state));
+  const btn = document.getElementById('save-btn');
+  btn.textContent = '✅ 已暫存';
+  btn.classList.add('saved');
+  setTimeout(() => {
+    btn.textContent = '💾 暫存進度';
+    btn.classList.remove('saved');
+  }, 1800);
+}
+
+function loadSaved() {
+  try { return JSON.parse(localStorage.getItem(SAVE_KEY) || 'null'); }
+  catch(e) { return null; }
+}
+
+function restoreProgress() {
+  const s = loadSaved();
+  if (!s) return;
+  queue = s.queue; cur = s.cur; round = s.round;
+  roundWrongIds = new Set(s.roundWrongIds);
+  roundGuessedIds = new Set(s.roundGuessedIds || []);
+  roundWrongAns = s.roundWrongAns;
+  sessionWrongIds = new Set(s.sessionWrongIds);
+  sessionWrongAns = s.sessionWrongAns;
+  correct1 = s.correct1; totalWrong = s.totalWrong;
+  document.getElementById('start-screen').classList.add('hidden');
+  document.getElementById('quiz-screen').classList.remove('hidden');
+  document.getElementById('save-btn').classList.remove('hidden');
+  showQ();
+}
+
+window.addEventListener('load', () => {
+  const s = loadSaved();
+  if (!s) return;
+  const d = new Date(s.ts);
+  const ts = `${d.getMonth()+1}/${d.getDate()} ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+  const btn = document.getElementById('restore-btn');
+  btn.textContent = `↩ 繼續上次進度（${ts}）`;
+  btn.classList.remove('hidden');
+});
+
+function startQuiz(){
+  localStorage.removeItem(SAVE_KEY);
+  document.getElementById('restore-btn').classList.add('hidden');
+  document.getElementById('start-screen').classList.add('hidden');
+  document.getElementById('quiz-screen').classList.remove('hidden');
+  document.getElementById('save-btn').classList.remove('hidden');
+  queue = QUESTIONS.map((_,i)=>i);
+  shuffle(queue);
+  round=1; roundTotal=queue.length;
+  roundWrongIds=new Set(); roundGuessedIds=new Set(); roundWrongAns={};
+  sessionWrongIds=new Set(); sessionWrongAns={};
+  correct1=0; totalWrong=0; cur=0;
+  showQ();
+}
+
+function shuffle(a){
+  for(let i=a.length-1;i>0;i--){
+    const j=Math.floor(Math.random()*(i+1));
+    [a[i],a[j]]=[a[j],a[i]];
+  }
+}
+
+function showQ(){
+  answered=false; selectedOptKey=null;
+  const q=QUESTIONS[queue[cur]];
+
+  const pct=(cur/queue.length)*100;
+  document.getElementById('progress-bar').style.width=pct+'%';
+  document.getElementById('progress-label').textContent=`第 ${cur+1} / ${queue.length} 題`;
+  document.getElementById('round-badge').textContent=
+    round===1?'第一輪':`第 ${round} 輪（錯題回收）`;
+
+  document.getElementById('section-tag').textContent=q.section;
+
+  const gc=document.getElementById('group-context');
+  if(q.group_context){ gc.innerHTML=q.group_context; gc.classList.remove('hidden'); }
+  else { gc.classList.add('hidden'); }
+
+  let stemHTML=q.stem||'';
+  if(q.sub_n) stemHTML=`<span style="color:#1d4e89;font-weight:700;">第(${q.sub_n})小題　</span>`+stemHTML;
+  document.getElementById('question-stem').innerHTML=stemHTML;
+
+  document.getElementById('feedback').style.display='none';
+  document.getElementById('feedback').className='';
+  document.getElementById('confirm-btn').style.display='none';
+  const gb=document.getElementById('guessed-btn');
+  gb.style.display='none'; gb.disabled=false;
+  gb.textContent='🎲 我是用猜的，加入回收'; gb.classList.remove('marked');
+  document.getElementById('next-btn').style.display='none';
+
+  const optsEl=document.getElementById('options');
+  optsEl.innerHTML='';
+  const opts=q.opts||{};
+
+  if(Object.keys(opts).length===4){
+    ['A','B','C','D'].forEach(k=>{
+      const btn=document.createElement('button');
+      btn.className='opt-btn';
+      btn.innerHTML=`<span class="lbl">${k}</span><span>${opts[k]}</span>`;
+      btn.onclick=()=>selectOpt(k, btn, null);
+      optsEl.appendChild(btn);
+    });
+  } else {
+    const disp=document.createElement('div');
+    disp.id='img-opt-display';
+    disp.innerHTML=q.full_html||'';
+    optsEl.appendChild(disp);
+    const grid=document.createElement('div');
+    grid.className='abcd-grid';
+    ['A','B','C','D'].forEach(k=>{
+      const btn=document.createElement('button');
+      btn.className='abcd-btn';
+      btn.textContent=k;
+      btn.onclick=()=>selectOpt(k, null, btn);
+      grid.appendChild(btn);
+    });
+    optsEl.appendChild(grid);
+  }
+}
+
+function selectOpt(k, optBtn, abcdBtn){
+  if(answered) return;
+  selectedOptKey=k;
+  document.querySelectorAll('.opt-btn').forEach(b=>b.classList.remove('selected'));
+  document.querySelectorAll('.abcd-btn').forEach(b=>b.classList.remove('selected'));
+  if(optBtn) optBtn.classList.add('selected');
+  if(abcdBtn) abcdBtn.classList.add('selected');
+  document.getElementById('confirm-btn').style.display='block';
+}
+
+function confirmAnswer(){
+  if(!selectedOptKey || answered) return;
+  answered=true;
+  const chosen=selectedOptKey;
+  const q=QUESTIONS[queue[cur]];
+  const correct=q.answer;
+  const isOk=(chosen===correct);
+
+  document.getElementById('confirm-btn').style.display='none';
+
+  if(document.querySelectorAll('.opt-btn').length>0){
+    document.querySelectorAll('.opt-btn').forEach((b,i)=>{
+      const k=['A','B','C','D'][i];
+      b.classList.remove('selected');
+      if(k===correct) b.classList.add('reveal');
+    });
+    document.querySelectorAll('.opt-btn')[['A','B','C','D'].indexOf(chosen)]
+      .classList.add(isOk?'correct':'wrong');
+  } else {
+    document.querySelectorAll('.abcd-btn').forEach(b=>{
+      b.classList.remove('selected');
+      if(b.textContent===correct) b.classList.add('reveal');
+      if(b.textContent===chosen) b.classList.add(isOk?'correct':'wrong');
+    });
+  }
+
+  const fb=document.getElementById('feedback');
+  fb.style.display='block';
+  if(isOk){
+    fb.className='ok'; fb.textContent='✓ 答對了！';
+    if(round===1) correct1++;
+    document.getElementById('guessed-btn').style.display='block';
+  } else {
+    fb.className='err'; fb.textContent=`✗ 答錯了，正確答案是 ${correct}`;
+    const qid=queue[cur];
+    roundWrongIds.add(qid);
+    roundWrongAns[qid]=chosen;
+    if(!sessionWrongIds.has(qid)) sessionWrongAns[qid]=chosen;
+    sessionWrongIds.add(qid);
+    totalWrong++;
+  }
+  document.getElementById('next-btn').style.display='block';
+}
+
+function markAsGuessed(){
+  const qid=queue[cur];
+  roundWrongIds.add(qid);
+  roundGuessedIds.add(qid);
+  sessionWrongIds.add(qid);
+  if(!sessionWrongAns[qid]) sessionWrongAns[qid]='（猜對）';
+  const btn=document.getElementById('guessed-btn');
+  btn.textContent='🎲 已標記為猜對，加入下輪回收';
+  btn.classList.add('marked'); btn.disabled=true;
+}
+
+function nextQuestion(){
+  cur++;
+  if(cur>=queue.length){ showRoundEnd(); } else { showQ(); }
+}
+
+function showRoundEnd(){
+  document.getElementById('quiz-screen').classList.add('hidden');
+  document.getElementById('round-end-screen').classList.remove('hidden');
+
+  const recycleCount=roundWrongIds.size;
+  const guessedCount=roundGuessedIds.size;
+  const wrongOnlyCount=recycleCount-guessedCount;
+  const correctCount=queue.length-recycleCount;
+  const allDone=(recycleCount===0);
+
+  document.getElementById('re-emoji').textContent=allDone?'🎉':'📝';
+  document.getElementById('re-title').textContent=allDone?'全部答對了！':`第 ${round} 輪完成`;
+
+  if(allDone){
+    document.getElementById('re-desc').textContent=`恭喜完成全部 ${round} 輪練習！`;
+  } else {
+    const parts=[];
+    if(wrongOnlyCount>0) parts.push(`答錯 ${wrongOnlyCount} 題`);
+    if(guessedCount>0) parts.push(`猜對 ${guessedCount} 題`);
+    document.getElementById('re-desc').textContent=
+      `${parts.join('、')}，共 ${recycleCount} 題加入下輪回收。`;
+  }
+
+  document.getElementById('re-total').textContent=queue.length;
+  document.getElementById('re-correct').textContent=correctCount;
+  document.getElementById('re-wrong').textContent=recycleCount;
+  document.getElementById('re-wrong-lbl').textContent=
+    guessedCount>0?`回收（含 ${guessedCount} 猜）`:'答錯（回收）';
+  document.getElementById('re-rounds').textContent=round;
+
+  const nextBtn=document.getElementById('re-next-btn');
+  const exportBtn=document.getElementById('re-export-btn');
+  if(allDone){
+    nextBtn.style.display='none';
+    exportBtn.style.display='none';
+  } else {
+    nextBtn.textContent=`開始第 ${round+1} 輪（${recycleCount} 題）`;
+    nextBtn.style.display='block';
+    exportBtn.style.display='block';
+  }
+}
+
+function startNextRound(){
+  const ids=[...roundWrongIds];
+  round++;
+  roundTotal=ids.length;
+  roundWrongIds=new Set(); roundGuessedIds=new Set(); roundWrongAns={};
+  queue=ids; shuffle(queue); cur=0;
+  document.getElementById('round-end-screen').classList.add('hidden');
+  document.getElementById('quiz-screen').classList.remove('hidden');
+  showQ();
+}
+
+function exportRoundPDF(){
+  const wrongIds=[...roundWrongIds];
+  const wrongAns={...roundWrongAns};
+  buildAndPrintPDF(wrongIds, wrongAns, round);
+}
+
+function buildAndPrintPDF(wrongIds, wrongAns, roundNum){
+  const wrongList=wrongIds.sort((a,b)=>a-b).map(i=>QUESTIONS[i]);
+  const now=new Date();
+  const dateStr=`${now.getFullYear()}/${now.getMonth()+1}/${now.getDate()}`;
+
+  let cards=''; let lastSec='';
+  wrongList.forEach((q,n)=>{
+    if(q.section!==lastSec){
+      cards+=`<div class="pq-sec">${q.section}</div>`;
+      lastSec=q.section;
+    }
+    const subLabel=q.sub_n?`第(${q.sub_n})小題　`:'';
+    const ctx=q.group_context?`<div class="pq-ctx">${q.group_context}</div>`:'';
+    const stem=`<div class="pq-stem">${subLabel}${q.stem||''}</div>`;
+    let optsHtml='';
+    const opts=q.opts||{};
+    if(Object.keys(opts).length===4){
+      optsHtml='<div class="pq-opts">';
+      ['A','B','C','D'].forEach(k=>{
+        optsHtml+=`<div class="pq-opt"><span class="pq-lbl">${k}</span>${opts[k]}</div>`;
+      });
+      optsHtml+='</div>';
+    } else {
+      optsHtml=`<div class="pq-full">${q.full_html||''}</div>`;
+    }
+    cards+=`<div class="pq-card"><div class="pq-num">第 ${n+1} 題</div>${ctx}${stem}${optsHtml}</div>`;
+  });
+
+  let ansRows='';
+  wrongList.forEach((q,n)=>{
+    const myAns=wrongAns[q.id]||'─';
+    ansRows+=`<tr><td>${n+1}</td><td class="wrong-cell">${myAns}</td><td class="right-cell">${q.answer}</td></tr>`;
+  });
+
+  const html=`<!DOCTYPE html>
+<html lang="zh-TW"><head><meta charset="UTF-8">
+<title>地理錯題 第${roundNum}輪</title>
+<style>
+  body{font-family:-apple-system,'Noto Sans TC',sans-serif;margin:0;padding:20px;color:#111;}
+  h2{color:#1d4e89;margin-bottom:4px;}
+  .sub{color:#888;font-size:.85rem;margin-bottom:24px;}
+  .pq-sec{font-weight:700;font-size:.82rem;background:#dbeafe;color:#1d4e89;
+    padding:3px 12px;border-radius:999px;display:inline-block;margin:20px 0 10px;}
+  .pq-card{border:1px solid #ddd;border-radius:12px;padding:16px;margin-bottom:14px;page-break-inside:avoid;}
+  .pq-num{font-size:.75rem;color:#999;margin-bottom:6px;}
+  .pq-ctx{background:#f6f6f6;border-left:3px solid #5b9bd5;padding:8px 12px;
+    border-radius:0 6px 6px 0;margin-bottom:10px;font-size:.9rem;line-height:1.7;}
+  .pq-ctx img,.pq-full img{max-width:100%;border-radius:6px;margin:4px 0;display:block;}
+  .pq-stem{font-size:.97rem;line-height:1.8;margin-bottom:12px;}
+  .pq-stem img{max-width:100%;border-radius:6px;margin:4px 0;display:block;}
+  .pq-opts{display:flex;flex-direction:column;gap:6px;}
+  .pq-opt{display:flex;align-items:flex-start;gap:8px;padding:8px 10px;
+    border-radius:8px;border:1px solid #eee;font-size:.9rem;line-height:1.6;}
+  .pq-lbl{background:#e8e8e8;border-radius:5px;min-width:24px;height:24px;
+    display:flex;align-items:center;justify-content:center;
+    font-weight:700;font-size:.82rem;flex-shrink:0;}
+  .pq-full{font-size:.9rem;line-height:1.8;}
+  .ans-page{page-break-before:always;padding-top:20px;}
+  .ans-page h3{color:#1d4e89;margin-bottom:16px;font-size:1.2rem;}
+  .ans-table{border-collapse:collapse;width:100%;max-width:360px;font-size:.95rem;}
+  .ans-table th,.ans-table td{border:1px solid #ddd;padding:8px 16px;text-align:center;}
+  .ans-table th{background:#dbeafe;color:#1d3557;font-weight:700;}
+  .wrong-cell{color:#c1121f;font-weight:700;}
+  .right-cell{color:#1d4e89;font-weight:700;}
+  @media print{body{padding:0;}@page{margin:1.5cm;}}
+</style></head><body>
+<h2>地理錯題整理 · 第 ${roundNum} 輪</h2>
+<div class="sub">練習日期：${dateStr}　本輪答錯 ${wrongList.length} 題</div>
+${cards}
+<div class="ans-page">
+  <h3>答案</h3>
+  <table class="ans-table">
+    <thead><tr><th>題號</th><th>你的答案</th><th>正確答案</th></tr></thead>
+    <tbody>${ansRows}</tbody>
+  </table>
+</div>
+</body></html>`;
+
+  const blob=new Blob([html],{type:'text/html;charset=utf-8'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url; a.download=`公民錯題_第${roundNum}輪.html`;
+  document.body.appendChild(a); a.click();
+  document.body.removeChild(a);
+  setTimeout(()=>URL.revokeObjectURL(url),1500);
+}
+
+function restartQuiz(){
+  localStorage.removeItem(SAVE_KEY);
+  document.getElementById('save-btn').classList.add('hidden');
+  document.getElementById('round-end-screen').classList.add('hidden');
+  document.getElementById('start-screen').classList.remove('hidden');
+}
+</script>
+</body>
+</html>
